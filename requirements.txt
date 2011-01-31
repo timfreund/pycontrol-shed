@@ -1,0 +1,1 @@
+-e hg+https://timfreund@bitbucket.org/timfreund/python-keyring-lib-patches#egg=keyring
