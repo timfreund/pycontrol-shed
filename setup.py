@@ -23,10 +23,10 @@ setup(
     include_package_data=True,
     entry_points="""
     [console_scripts]
-    pycontrolshed-demo = pycontrolshed.demo:main
-    pycontrolshed-member-list = pycontrolshed.cli:members
-    pycontrolshed-member-enable = pycontrolshed.cli:enable_member
-    pycontrolshed-member-disable = pycontrolshed.cli:disable_member
-    pycontrolshed-pools = pycontrolshed.cli:pools
+    pyctrl-demo = pycontrolshed.demo:main
+    pyctrl-member-list = pycontrolshed.cli:members
+    pyctrl-member-enable = pycontrolshed.cli:enable_member
+    pyctrl-member-disable = pycontrolshed.cli:disable_member
+    pyctrl-pools = pycontrolshed.cli:pools
     """,
 )
