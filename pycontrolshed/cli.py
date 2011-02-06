@@ -9,7 +9,7 @@ def members_validator(arg_parser, options, args):
     print "Please supply one or more pool names"
     return False
 
-def state_switch_validator(arg_parser, options, args):
+def member_action_validator(arg_parser, options, args):
     if options.pool is None or options.member is None:
         print "Must supply pool and member arguments"
         return False
@@ -44,7 +44,9 @@ def parse_options(additional_options=[], validator=None):
     return (options, args)
 
 def members():
-    options, args = parse_options(validator=members_validator)
+    options, args = parse_options([Option('-s', '--statistics',
+                                          action="store_true", default=False, dest='statistics')],
+                                  validator=members_validator)
 
     environment = options.environment
     bigip = environment.active_bigip_connection
@@ -64,8 +66,8 @@ def members():
 def enable_disable_member(target_state):
     options, args = parse_options([Option('-p', '--pool', dest='pool', help='pool name'),
                                    Option('-m', '--member', dest='member',
-                                          help='member addres (host:port)')],
-                                  state_switch_validator)
+                                          help='member address (host:port)')],
+                                  member_action_validator)
 
     environment = options.environment
     bigip = environment.active_bigip_connection
@@ -92,6 +94,32 @@ def enable_member():
 def disable_member():
     enable_disable_member('STATE_DISABLED')
 
+def show_member_statistics():
+    # TODO refactor this and enable_disable_member to share common code
+    options, args = parse_options([Option('-p', '--pool', dest='pool', help='pool name'),
+                                   Option('-m', '--member', dest='member',
+                                          help='member address (host:port)')],
+                                  member_action_validator)
+    environment = options.environment
+    bigip = environment.active_bigip_connection
+
+    member = bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinition')
+    addr, port = options.member.split(':')
+    member.address = addr
+    member.port = int(port)
+
+    ippd_seq_seq = bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequenceSequence')
+    ippd_seq = bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequence')
+
+    ippd_seq_seq.item = ippd_seq
+    ippd_seq.item = member
+    
+    stats = bigip.LocalLB.PoolMember.get_statistics(pool_names=[options.pool], members=ippd_seq_seq)
+    member_stats = stats[0].statistics[0]
+    # member_stats.member is the IPPortDefinition
+    for statistic in member_stats.statistics:
+        print "%s,%d,%d" % (statistic.type, statistic.value.high, statistic.value.low)
+
 def pools():
     options, args = parse_options()
 
@@ -102,3 +130,15 @@ def pools():
 
     for p in pools:
         print p
+
+def shell():
+    arg_parser = pycontrolshed.create_default_arg_parser()
+    (options, args) = arg_parser.parse_args()
+    
+    config = pycontrolshed.get_configuration(options.configuration)
+    environment = Environment(options.environment)
+    environment.configure(config)
+    bigip = environment.active_bigip_connection
+
+    print "Your BIGIP device is in a variable named bigip."
+    from IPython.Shell import IPShellEmbed; IPShellEmbed([])()
