@@ -1,5 +1,7 @@
 # Copyright (C) 2011 Tim Freund and contributors.
-# See LICENSE for details.
+#
+# This software may be used and distributed according to the terms of the
+# GNU General Public License version 2 or any later version.
 
 import ConfigParser
 import getpass

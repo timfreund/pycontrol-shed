@@ -8,7 +8,7 @@ setup(
     description="BIGIP pycontrol shell edition",
     author='Tim Freund',
     author_email='tim@freunds.net',
-    license = 'GPL',
+    license = 'GPLv2+',
     url='http://github.com/timfreund/pycontrolshed',
     install_requires=[
         'pycontrol >= 2.0.0',
