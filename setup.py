@@ -17,7 +17,7 @@ setup(
     packages=['pycontrolshed'],
     test_suite='nose.collector',
     tests_require=[
-                   'nosetests',
+                   'nose',
                    'coverage',
                    ],
     include_package_data=True,
