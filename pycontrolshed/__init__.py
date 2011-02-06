@@ -22,6 +22,28 @@ def get_configuration(path=None):
     if path is None:
         path = os.path.expanduser('~/.pycontrolshed')
 
+    try:
+        os.stat(path)
+    except OSError:
+        print """You have no configuration file at %s.
+We are creating one now, please edit for accuracy""" % (path)
+
+        config_file = open(path, 'w')
+        config_file.write("""[global_options]
+default_environment=my_environment
+
+[my_environment]
+username=my_username
+hosts=127.0.0.1,127.0.0.2
+
+[my_other_environment]
+username=my_other_username
+hosts=127.0.0.3,127.0.0.4
+
+""")
+
+        sys.exit(-1)
+
     config = ConfigParser.ConfigParser()
     config.read(path)
 

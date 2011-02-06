@@ -137,12 +137,8 @@ def pools():
         print p
 
 def shell():
-    arg_parser = pycontrolshed.create_default_arg_parser()
-    (options, args) = arg_parser.parse_args()
-    
-    config = pycontrolshed.get_configuration(options.configuration)
-    environment = Environment(options.environment)
-    environment.configure(config)
+    options, args = parse_options()
+    environment = options.environment
     bigip = environment.active_bigip_connection
 
     print "Your BIGIP device is in a variable named bigip."
