@@ -6,6 +6,7 @@
 from pycontrolshed.model import Environment
 from optparse import Option
 import pycontrolshed
+import socket
 import sys
 
 def members_validator(arg_parser, options, args):
@@ -20,10 +21,13 @@ def member_action_validator(arg_parser, options, args):
         return False
     return True
 
-def parse_options(additional_options=[], validator=None):
+def parse_options(additional_options=[], validator=None, custom_usage=None):
     arg_parser = pycontrolshed.create_default_arg_parser()
     for option in additional_options:
         arg_parser.add_option(option)
+
+    if custom_usage:
+        arg_parser.usage = custom_usage
 
     (options, args) = arg_parser.parse_args()
 
@@ -98,6 +102,48 @@ def enable_member():
 
 def disable_member():
     enable_disable_member('STATE_DISABLED')
+
+def enable_node():
+    enable_disable_node('STATE_ENABLED')
+
+def disable_node():
+    enable_disable_node('STATE_DISABLED')
+
+def enable_disable_node(target_state):
+    options, args = parse_options([],
+                                  None,
+                                  '%%prog node1 [node2 node3 node4]')
+    if not len(args):
+        print "No nodes provided"
+    else:
+        environment = options.environment
+        bigip = environment.active_bigip_connection
+
+        nodes = []
+        states = []
+        for node in args:
+            nodes.append(socket.gethostbyname(node))
+            states.append(target_state)
+        
+        bigip.LocalLB.NodeAddress.set_session_enabled_state(node_addresses=nodes, states=states)
+
+def show_node_status():
+    options, args = parse_options([],
+                                  None,
+                                  '%%prog node1 [node2 node3 node4]')
+    if not len(args):
+        print "No nodes provided"
+    else:
+        environment = options.environment
+        bigip = environment.active_bigip_connection
+
+        nodes = []
+        for node in args:
+            nodes.append(socket.gethostbyname(node))
+        statuses = bigip.LocalLB.NodeAddress.get_session_enabled_state(node_addresses=nodes)
+
+        for node, status in zip(nodes, statuses):
+            print "%s (%s): %s" % (node, socket.getfqdn(node), status)
 
 def show_member_statistics():
     # TODO refactor this and enable_disable_member to share common code

@@ -40,7 +40,7 @@ class Environment(object):
                 return bigip
         raise Exception('No active BIGIP devices were found in this environment (%s)' % self.name)
 
-    def connect_to_bigip(self, host, wsdls=['LocalLB.Pool', 'LocalLB.PoolMember', 'System.Failover']):
+    def connect_to_bigip(self, host, wsdls=['LocalLB.NodeAddress', 'LocalLB.Pool', 'LocalLB.PoolMember', 'System.Failover']):
         bigip = pycontrol.BIGIP(host,
                                 self.username,
                                 self.password,
