@@ -10,7 +10,7 @@ import socket
 import sys
 
 def members_validator(arg_parser, options, args):
-    if args is not None and len(args) > 0:
+    if (args is not None and len(args) > 0) or (options.pool is not None):
         return True
     print "Please supply one or more pool names"
     return False
@@ -54,8 +54,13 @@ def parse_options(additional_options=[], validator=None, custom_usage=None):
 
 def members():
     options, args = parse_options([Option('-s', '--statistics',
-                                          action="store_true", default=False, dest='statistics')],
-                                  validator=members_validator)
+                                          action="store_true", default=False, dest='statistics'),
+                                   Option('-p', '--pool', dest='pool', help='Not strictly necessary, but it aligns the command options with other member related commands')],
+                                  validator=members_validator,
+                                  custom_usage="%prog pool_name1 [pool_name2 pool_name3 ...]")
+
+    if options.pool is not None:
+        args.append(options.pool)
 
     environment = options.environment
     bigip = environment.active_bigip_connection
