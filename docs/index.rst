@@ -9,8 +9,11 @@ Welcome to Pycontrol Shell Edition's documentation!
 Contents:
 
 .. toctree::
-   configuration
    :maxdepth: 2
+
+   configuration
+   commands
+
 
 Indices and tables
 ==================
