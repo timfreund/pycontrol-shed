@@ -77,7 +77,7 @@ def members():
                                       session.session_state,
                                       monitor.monitor_status)
 
-def enable_disable_member(target_state):
+def pool_member_actor(function, **kwargs):
     options, args = parse_options([Option('-p', '--pool', dest='pool', help='pool name'),
                                    Option('-m', '--member', dest='member',
                                           help='member address (host:port)')],
@@ -88,8 +88,17 @@ def enable_disable_member(target_state):
 
     member = bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinition')
     addr, port = options.member.split(':')
-    member.address = addr
+    member.address = socket.gethostbyname(addr)
     member.port = int(port)
+
+    kwargs['bigip'] = bigip
+    kwargs['member'] = member
+    kwargs['pool'] = options.pool
+
+    function(**kwargs)
+
+
+def enable_disable_member(bigip, member, pool, target_state):
 
     session_state = bigip.LocalLB.PoolMember.typefactory.create('LocalLB.PoolMember.MemberSessionState')
     session_state.member = member
@@ -98,15 +107,14 @@ def enable_disable_member(target_state):
     session_states = bigip.LocalLB.PoolMember.typefactory.create('LocalLB.PoolMember.MemberSessionStateSequence')
     session_states.item = [session_state]
 
-    bigip.LocalLB.PoolMember.set_session_enabled_state(pool_names=[options.pool],
+    bigip.LocalLB.PoolMember.set_session_enabled_state(pool_names=[pool],
                                                        session_states=[session_states])
-    
 
 def enable_member():
-    enable_disable_member('STATE_ENABLED')
+    pool_member_actor(enable_disable_member, target_state='STATE_ENABLED')
 
 def disable_member():
-    enable_disable_member('STATE_DISABLED')
+    pool_member_actor(enable_disable_member, target_state='STATE_DISABLED')
 
 def enable_node():
     enable_disable_node('STATE_ENABLED')
@@ -150,31 +158,21 @@ def show_node_status():
         for node, status in zip(nodes, statuses):
             print "%s (%s): %s" % (node, socket.getfqdn(node), status)
 
-def show_member_statistics():
-    # TODO refactor this and enable_disable_member to share common code
-    options, args = parse_options([Option('-p', '--pool', dest='pool', help='pool name'),
-                                   Option('-m', '--member', dest='member',
-                                          help='member address (host:port)')],
-                                  member_action_validator)
-    environment = options.environment
-    bigip = environment.active_bigip_connection
-
-    member = bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinition')
-    addr, port = options.member.split(':')
-    member.address = addr
-    member.port = int(port)
-
+def show_member_statistics(bigip, pool, member):
     ippd_seq_seq = bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequenceSequence')
     ippd_seq = bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequence')
 
     ippd_seq_seq.item = ippd_seq
     ippd_seq.item = member
     
-    stats = bigip.LocalLB.PoolMember.get_statistics(pool_names=[options.pool], members=ippd_seq_seq)
+    stats = bigip.LocalLB.PoolMember.get_statistics(pool_names=[pool], members=ippd_seq_seq)
     member_stats = stats[0].statistics[0]
     # member_stats.member is the IPPortDefinition
     for statistic in member_stats.statistics:
         print "%s,%d,%d" % (statistic.type, statistic.value.high, statistic.value.low)
+
+def show_member_statistics_cmd():
+    pool_member_actor(show_member_statistics)
 
 def pools():
     options, args = parse_options()

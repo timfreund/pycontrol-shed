@@ -26,7 +26,7 @@ setup(
     pyctrl-member-disable = pycontrolshed.cli:disable_member
     pyctrl-member-enable = pycontrolshed.cli:enable_member
     pyctrl-member-list = pycontrolshed.cli:members
-    pyctrl-member-stats = pycontrolshed.cli:show_member_statistics
+    pyctrl-member-stats = pycontrolshed.cli:show_member_statistics_cmd
     pyctrl-node-enable = pycontrolshed.cli:enable_node
     pyctrl-node-disable = pycontrolshed.cli:disable_node
     pyctrl-node-status = pycontrolshed.cli:show_node_status
