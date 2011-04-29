@@ -2,7 +2,7 @@
  Commands
 ==========
 
-Don't feel like guessing at the intent of pycontrolshed's commands?  A
+Don't feel like guessing at the intent of pycontrol-shed's commands?  A
 summary of each follows:
 
 pyctrl-member-disable, pyctrl-member-enable

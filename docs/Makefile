@@ -128,3 +128,6 @@ doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
+
+deploy: html
+	rsync -v -v -a --delete _build/html/* ec2:/usr/data/www/content/net/freunds/projects/pycontrol-shed

@@ -1,12 +1,12 @@
 Configuration
 *************
 
-The ``pycontrolshed`` library and command suite is built to help you
+The ``pycontrol-shed`` library and command suite is built to help you
 quickly interact with your BIG-IP devices.  Omitting device names,
 user names, and passwords from individual commands has been a huge
 enhancements, but it requires a bit of configuration.
 
-You must have a configuration file at ``$HOME/.pycontrolshed``.  Run a
+You must have a configuration file at ``$HOME/.pycontrol-shed``.  Run a
 command before creating that file, and the command will offer to
 create one for you.
 
@@ -29,7 +29,7 @@ sample configuration follows::
 Environments
 ============
 
-All of the ``pycontrolshed`` commands accept an environment option as
+All of the ``pycontrol-shed`` commands accept an environment option as
 an option (``-e`` or ``--environment=``), and the command will execute
 against the environment specified as defined in your configuration
 file.  The command will run in your ``default_environment`` if you do
@@ -47,7 +47,7 @@ logging in to each, until it finds ``FAILOVER_STATE_ACTIVE``.
 Authentication
 ==============
 
-We make use of the `Python Keyring` library for secure password
+We make use of the `Python Keyring`_ library for secure password
 storage.  You will be asked to provide and confirm a password for new
 devices, and that password will be stored in your operating system's
 native keyring for later retrieval.  
