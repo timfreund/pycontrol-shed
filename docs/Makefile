@@ -89,7 +89,10 @@ epub:
 	$(SPHINXBUILD) -b epub $(ALLSPHINXOPTS) $(BUILDDIR)/epub
 	@echo
 	@echo "Build finished. The epub file is in $(BUILDDIR)/epub."
-
+mobi: epub
+	mkdir -p ${BUILDDIR}/mobi/
+	ebook-convert ${BUILDDIR}/epub/PycontrolShellEdition.epub ${BUILDDIR}/mobi/PycontrolShellEdition.mobi
+	@echo "Build finished. The mobi file is in $(BUILDDIR)/mobi."
 latex:
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
 	@echo
@@ -129,5 +132,8 @@ doctest:
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
-deploy: html
+deploy: latexpdf mobi html
 	rsync -v -v -a --delete _build/html/* ec2:/usr/data/www/content/net/freunds/projects/pycontrol-shed
+	scp ${BUILDDIR}/epub/PycontrolShellEdition.epub ec2:/usr/data/www/content/net/freunds/projects/pycontrol-shed
+	scp ${BUILDDIR}/mobi/PycontrolShellEdition.mobi ec2:/usr/data/www/content/net/freunds/projects/pycontrol-shed
+	scp ${BUILDDIR}/latex/PycontrolShellEdition.pdf ec2:/usr/data/www/content/net/freunds/projects/pycontrol-shed

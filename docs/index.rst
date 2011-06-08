@@ -6,6 +6,12 @@
 Welcome to Pycontrol Shell Edition's documentation!
 ===================================================
 
+Other formats are available:
+
+* `PDF Version`_
+* `ePub Version`_
+* `Mobipocket Version`_
+
 Contents:
 
 .. toctree::
@@ -23,4 +29,10 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+
+.. _PDF Version: http://projects.freunds.net/pycontrol-shed/PycontrolShellEdition.pdf
+.. _ePub Version: http://projects.freunds.net/pycontrol-shed/PycontrolShellEdition.epub
+.. _Mobipocket Version: http://projects.freunds.net/pycontrol-shed/PycontrolShellEdition.mobi
+
 
