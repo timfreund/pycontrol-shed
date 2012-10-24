@@ -3,6 +3,6 @@ ipython==0.12
 -e hg+https://bitbucket.org/timfreund/python-keyring-lib@0c959f189a5e4d75cf71de5658afb0dc967e7808#egg=keyring-dev
 paramiko==1.7.7.1
 pycontrol==2.0.1.a
--e git+git@github.com:timfreund/pycontrol-shed.git@c64fab1711c5b9775efbd61534756ed4a72275a6#egg=pycontrolshed-dev
+-e git+git@github.com:timfreund/pycontrol-shed.git@6c0cd0fff6e653304e0fd2426f58026cbf30421c#egg=pycontrolshed-dev
 pycrypto==2.5
 suds==0.4
