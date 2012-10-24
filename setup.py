@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pycontrolshed',
-    version='0.5',
+    version='0.5.1',
     description="BIGIP pycontrol shell edition",
     author='Tim Freund',
     author_email='tim@freunds.net',
