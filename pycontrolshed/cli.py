@@ -191,4 +191,11 @@ def shell():
     bigip = environment.active_bigip_connection
 
     print "Your BIGIP device is in a variable named bigip."
-    from IPython.Shell import IPShellEmbed; IPShellEmbed([])()
+
+    import IPython
+    from IPython.config.loader import Config
+    cfg = Config()
+    # directly open the shell
+    IPython.embed(config=cfg)
+
+    # from IPython.Shell import IPShellEmbed; IPShellEmbed([])()
