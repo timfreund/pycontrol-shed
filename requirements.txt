@@ -1,8 +1,8 @@
-distribute==0.6.10
-ipython==0.10.2
--e hg+https://bitbucket.org/timfreund/python-keyring-lib@0c959f189a5e4d75cf71de5658afb0dc967e7808#egg=keyring-tip
+distribute==0.6.24
+ipython==0.12
+-e hg+https://bitbucket.org/timfreund/python-keyring-lib@0c959f189a5e4d75cf71de5658afb0dc967e7808#egg=keyring-dev
 paramiko==1.7.7.1
-pycontrol==2.0.1a
--e git+https://github.com/timfreund/pycontrol-shed.git@d7bcb50f0569da4d20521975cdf28abf10bffcdf#egg=pycontrolshed-0.5-py2.7-dev
-pycrypto==2.3
+pycontrol=2.0.1.a
+-e git+git@github.com:timfreund/pycontrol-shed.git@b61ae6e9f1fd40d0a1d49e32ae2d1b1b8f04e446#egg=pycontrolshed-dev
+pycrypto==2.5
 suds==0.4
