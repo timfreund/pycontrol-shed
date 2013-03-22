@@ -8,6 +8,10 @@ from pycontrol import pycontrol
 import pycontrolshed
 import socket
 
+# In [1]: route_domains = bigip.Networking.RouteDomain.get_list()
+# In [2]: route_domains
+# Out[2]: [2220L]
+
 def partitioned(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
@@ -68,7 +72,20 @@ class PyCtrlShedBIGIP(pycontrol.BIGIP):
     def __init__(self, *args, **kwargs):
         pycontrol.BIGIP.__init__(self, *args, **kwargs)
         self.nodes = NodeAssistant(self)
+        self._active_partition = None
 
+    @property
+    def active_partition(self):
+        if self._active_partition:
+            return self._active_partition
+        self._active_partition = str(self.Management.Partition.get_active_partition())
+        return self._active_partition
+
+    @active_partition.setter
+    def active_partition(self, partition):
+        self.Management.Partition.set_active_partition(partition)
+        self._active_partition = partition
+        
 class Environment(object):
     def __init__(self, name, **kwargs):
         self.name = name
@@ -105,7 +122,8 @@ class Environment(object):
 
     def connect_to_bigip(self, host, wsdls=['LocalLB.NodeAddress', 'LocalLB.Pool', 'LocalLB.PoolMember', 
                                             'LocalLB.VirtualAddress', 'LocalLB.VirtualServer', 
-                                            'Management.Partition', 'System.Failover']):
+                                            'Management.Partition', 'Networking.RouteDomain', 
+                                            'System.Failover']):
         bigip = PyCtrlShedBIGIP(host,
                                 self.username,
                                 self.password,
