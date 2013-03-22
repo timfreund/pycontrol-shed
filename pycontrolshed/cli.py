@@ -195,7 +195,4 @@ def shell():
     import IPython
     from IPython.config.loader import Config
     cfg = Config()
-    # directly open the shell
     IPython.embed(config=cfg)
-
-    # from IPython.Shell import IPShellEmbed; IPShellEmbed([])()
