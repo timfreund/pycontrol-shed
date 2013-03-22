@@ -44,7 +44,7 @@ class NodeAssistant(object):
         targets = []
         states = []
         for node in nodes:
-            targets.append(socket.gethostbyname(node))
+            targets.append(self.bigip.host_to_node(node))
             states.append(target_state)
 
         self.bigip.LocalLB.NodeAddress.set_session_enabled_state(node_addresses=targets,
@@ -58,13 +58,13 @@ class NodeAssistant(object):
 
         targets = []
         for node in nodes:
-            targets.append(socket.gethostbyname(node))
+            targets.append(self.bigip.host_to_node(node))
         statuses = self.bigip.LocalLB.NodeAddress.get_session_enabled_state(node_addresses=targets)
 
         rc = []
         for node, status in zip(targets, statuses):
             rc.append({'node': node,
-                       'fqdn': socket.getfqdn(node),
+                       'fqdn': self.bigip.node_to_host(node),
                        'status': status})
         return rc
 
@@ -85,6 +85,28 @@ class PyCtrlShedBIGIP(pycontrol.BIGIP):
     def active_partition(self, partition):
         self.Management.Partition.set_active_partition(partition)
         self._active_partition = partition
+        self._route_domains = self.Networking.RouteDomain.get_list()
+
+    def host_to_node(self, host):
+        node = socket.gethostbyname(host)
+        if (len(self.route_domains) == 1) and self.route_domains[0] != 0:
+            node += "%%%d" % self.route_domains[0]
+        return node
+
+    def node_to_ip(self, node):
+        if node.count('%'):
+            return node.split('%')[0]
+        return node
+
+    def node_to_host(self, node):
+        return socket.getfqdn(self.node_to_ip(node))
+
+    @property
+    def route_domains(self):
+        if hasattr(self, '_route_domains'):
+            return self._route_domains
+        self._route_domains = self.Networking.RouteDomain.get_list()
+        return self._route_domains
         
 class Environment(object):
     def __init__(self, name, **kwargs):
