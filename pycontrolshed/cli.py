@@ -65,17 +65,14 @@ def members():
     environment = options.environment
     bigip = environment.active_bigip_connection
 
-    session_status_list = bigip.LocalLB.PoolMember.get_session_enabled_state(args)
-    monitor_status_list = bigip.LocalLB.PoolMember.get_monitor_status(args)
-
-    for pool, sessions, monitors in zip(args, session_status_list, monitor_status_list):
-        for session, monitor in zip(sessions, monitors):
-            member = session.member
-            print "%s,%s:%d,%s,%s" % (pool,
-                                      member.address,
-                                      member.port,
-                                      session.session_state,
-                                      monitor.monitor_status)
+    pools = bigip.pools.members(args, partition=options.partition)
+    for pool_name, pool in pools.items():
+        for member in pool['members']:
+            print "%s,%s:%d,%s,%s" % (pool_name,
+                                      member['address'],
+                                      member['port'],
+                                      member['session'].session_state,
+                                      member['monitor'].monitor_status)
 
 def pool_member_actor(function, **kwargs):
     options, args = parse_options([Option('-p', '--pool', dest='pool', help='pool name'),

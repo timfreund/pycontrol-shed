@@ -56,9 +56,7 @@ class NodeAssistant(object):
         if isinstance(nodes, basestring):
             nodes = [nodes]
 
-        targets = []
-        for node in nodes:
-            targets.append(self.bigip.host_to_node(node))
+        targets = [self.bigip.host_to_node(node) for node in nodes]
         statuses = self.bigip.LocalLB.NodeAddress.get_session_enabled_state(node_addresses=targets)
 
         rc = []
@@ -68,10 +66,35 @@ class NodeAssistant(object):
                        'status': status})
         return rc
 
+class PoolAssistant(object):
+    def __init__(self, bigip):
+        self.bigip = bigip
+
+    @partitioned
+    def members(self, pools, partition=None):
+        if isinstance(pools, basestring):
+            pools = [pools]
+
+        session_status_list = self.bigip.LocalLB.PoolMember.get_session_enabled_state(pools)
+        monitor_status_list = self.bigip.LocalLB.PoolMember.get_monitor_status(pools)
+
+        rc = {}
+        for pool, sessions, monitors in zip(pools, session_status_list, monitor_status_list):
+            members = []
+            for session, monitor in zip(sessions, monitors):
+                members.append({'address': session.member.address,
+                                'port': session.member.port,
+                                'monitor': monitor,
+                                'session': session})
+
+            rc[pool] = {'members': members}
+        return rc
+        
 class PyCtrlShedBIGIP(pycontrol.BIGIP):
     def __init__(self, *args, **kwargs):
         pycontrol.BIGIP.__init__(self, *args, **kwargs)
         self.nodes = NodeAssistant(self)
+        self.pools = PoolAssistant(self)
         self._active_partition = None
 
     @property
