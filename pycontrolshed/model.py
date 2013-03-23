@@ -31,13 +31,13 @@ class NodeAssistant(object):
         self.bigip = bigip
 
     def disable(self, nodes, partition=None):
-        self.__enable_disable_nodes(nodes, 'STATE_DISABLED', partition=partition)
+        self.enable_disable_nodes(nodes, 'STATE_DISABLED', partition=partition)
 
     def enable(self, nodes, partition=None):
-        self.__enable_disable_nodes(nodes, 'STATE_ENABLED', partition=partition)
+        self.enable_disable_nodes(nodes, 'STATE_ENABLED', partition=partition)
 
     @partitioned
-    def __enable_disable_nodes(self, nodes, target_state, partition=None):
+    def enable_disable_nodes(self, nodes, target_state, partition=None):
         if isinstance(nodes, basestring):
             nodes = [nodes]
 

@@ -132,13 +132,9 @@ def enable_disable_node(target_state):
         environment = options.environment
         bigip = environment.active_bigip_connection
 
-        nodes = []
-        states = []
-        for node in args:
-            nodes.append(socket.gethostbyname(node))
-            states.append(target_state)
-        
-        bigip.LocalLB.NodeAddress.set_session_enabled_state(node_addresses=nodes, states=states)
+        statuses = bigip.nodes.enable_disable_nodes(args, target_state, 
+                                                    partition=options.partition)
+        print_node_statuses(args, statuses)
 
 def show_node_status():
     options, args = parse_options([],
@@ -151,12 +147,14 @@ def show_node_status():
         bigip = environment.active_bigip_connection
 
         statuses = bigip.nodes.status(args, partition=options.partition)
+        print_node_statuses(args, statuses)
 
-        for node, status in zip(args, statuses):
-            if node == status['fqdn']:
-                print "%s: %s" % (node, status['status'])
-            else:
-                print "%s (%s): %s" % (node, status['fqdn'], status['status'])
+def print_node_statuses(nodes, statuses):
+    for node, status in zip(nodes, statuses):
+        if node == status['fqdn']:
+            print "%s: %s" % (node, status['status'])
+        else:
+            print "%s (%s): %s" % (node, status['fqdn'], status['status'])
 
 def show_member_statistics(bigip, pool, member):
     ippd_seq_seq = bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequenceSequence')
