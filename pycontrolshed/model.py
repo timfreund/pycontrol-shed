@@ -89,6 +89,35 @@ class PoolAssistant(object):
 
             rc[pool] = {'members': members}
         return rc
+
+    def disable_member(self, pool_name, members, partition=None):
+        return self.enable_disable_members(pool_name, members, 'STATE_DISABLED', partition=partition)
+
+    def enable_member(self, pool_name, members, partition=None):
+        return self.enable_disable_members(pool_name, members, 'STATE_ENABLED', partition=partition)
+
+    @partitioned
+    def enable_disable_members(self, pool_name, members, target_state, partition=None):
+        pools = [pool_name]
+
+        if isinstance(members, basestring) or members.__class__.__name__.count('IPPortDefinition'):
+            members = [members]
+
+        session_states = self.bigip.LocalLB.PoolMember.typefactory.create('LocalLB.PoolMember.MemberSessionStateSequence')
+        session_states.item = []
+        for member in members:
+            if isinstance(member, basestring):
+                ipp_member = self.bigip.host_port_to_ipportdef(*member.split(':'))
+                member = ipp_member
+
+            state = self.bigip.LocalLB.PoolMember.typefactory.create('LocalLB.PoolMember.MemberSessionState')
+            state.member = member
+            state.session_state = target_state
+            session_states.item.append(state)
+
+        self.bigip.LocalLB.PoolMember.set_session_enabled_state(pool_names=pools,
+                                                                session_states=[session_states])
+        return self.members(pools, partition=partition)
         
 class PyCtrlShedBIGIP(pycontrol.BIGIP):
     def __init__(self, *args, **kwargs):
@@ -110,7 +139,19 @@ class PyCtrlShedBIGIP(pycontrol.BIGIP):
         self._active_partition = partition
         self._route_domains = self.Networking.RouteDomain.get_list()
 
+    def host_port_to_ipportdef(self, host, port):
+        ipp = self.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinition')
+        ipp.address = self.host_to_node(host)
+        ipp.port = int(port)
+        return ipp
+
     def host_to_node(self, host):
+        # If someone provides us with a route domain, we're going to trust
+        # that they know what route domain to use. 
+        if host.count('%'):
+            host, route_domain = host.split('%', 1)
+            return "%s%%%s" % (socket.gethostbyname(host), route_domain)
+
         node = socket.gethostbyname(host)
         if (len(self.route_domains) == 1) and self.route_domains[0] != 0:
             node += "%%%d" % self.route_domains[0]

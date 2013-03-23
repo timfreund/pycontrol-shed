@@ -83,29 +83,18 @@ def pool_member_actor(function, **kwargs):
     environment = options.environment
     bigip = environment.active_bigip_connection
 
-    member = bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinition')
-    addr, port = options.member.split(':')
-    member.address = socket.gethostbyname(addr)
-    member.port = int(port)
+    member = bigip.host_port_to_ipportdef(*options.member.split(':'))
 
     kwargs['bigip'] = bigip
     kwargs['member'] = member
     kwargs['pool'] = options.pool
+    kwargs['partition'] = options.partition
 
     function(**kwargs)
 
 
-def enable_disable_member(bigip, member, pool, target_state):
-
-    session_state = bigip.LocalLB.PoolMember.typefactory.create('LocalLB.PoolMember.MemberSessionState')
-    session_state.member = member
-    session_state.session_state = target_state
-    
-    session_states = bigip.LocalLB.PoolMember.typefactory.create('LocalLB.PoolMember.MemberSessionStateSequence')
-    session_states.item = [session_state]
-
-    bigip.LocalLB.PoolMember.set_session_enabled_state(pool_names=[pool],
-                                                       session_states=[session_states])
+def enable_disable_member(bigip, member, pool, target_state, partition=None):
+    bigip.pools.enable_disable_members(pool, member, target_state, partition=partition)
 
 def enable_member():
     pool_member_actor(enable_disable_member, target_state='STATE_ENABLED')
