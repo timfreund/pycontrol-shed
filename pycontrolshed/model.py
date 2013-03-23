@@ -18,9 +18,9 @@ def partitioned(f):
         partition = kwargs.get('partition', None)
         if partition:
             orig_partition = self.bigip.Management.Partition.get_active_partition()
-            self.bigip.Management.Partition.set_active_partition(partition)
+            self.bigip.active_partition = partition
             rc = f(self, *args, **kwargs)
-            self.bigip.Management.Partition.set_active_partition(orig_partition)
+            self.bigip.active_partition = orig_partition
             return rc
         else:
             return f(self, *args, **kwargs)
@@ -90,6 +90,25 @@ class PoolAssistant(object):
             rc[pool] = {'members': members}
         return rc
 
+    @partitioned
+    def member_statistics(self, pool, member, partition=None):
+        # TODO This is kinda crappy... we should allow multiple pools and members here.
+        pools = [pool]
+        if isinstance(member, basestring):
+            ipp_member = self.bigip.host_port_to_ipportdef(*member.split(':'))
+            member = ipp_member
+
+        ippd_seq_seq = self.bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequenceSequence')
+        ippd_seq = self.bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequence')
+
+        ippd_seq_seq.item = ippd_seq
+        ippd_seq.item = member
+        
+        # this is kind of garbage too...  see TODO above
+        stats = self.bigip.LocalLB.PoolMember.get_statistics(pool_names=pools, members=ippd_seq_seq)[0].statistics[0]
+        return stats
+
+
     def disable_member(self, pool_name, members, partition=None):
         return self.enable_disable_members(pool_name, members, 'STATE_DISABLED', partition=partition)
 
@@ -137,6 +156,7 @@ class PyCtrlShedBIGIP(pycontrol.BIGIP):
     def active_partition(self, partition):
         self.Management.Partition.set_active_partition(partition)
         self._active_partition = partition
+        print "setting route domains for %s" % partition
         self._route_domains = self.Networking.RouteDomain.get_list()
 
     def host_port_to_ipportdef(self, host, port):

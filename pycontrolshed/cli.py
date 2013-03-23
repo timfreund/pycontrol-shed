@@ -83,7 +83,7 @@ def pool_member_actor(function, **kwargs):
     environment = options.environment
     bigip = environment.active_bigip_connection
 
-    member = bigip.host_port_to_ipportdef(*options.member.split(':'))
+    member = options.member
 
     kwargs['bigip'] = bigip
     kwargs['member'] = member
@@ -142,16 +142,8 @@ def print_node_statuses(nodes, statuses):
         else:
             print "%s (%s): %s" % (node, status['fqdn'], status['status'])
 
-def show_member_statistics(bigip, pool, member):
-    ippd_seq_seq = bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequenceSequence')
-    ippd_seq = bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequence')
-
-    ippd_seq_seq.item = ippd_seq
-    ippd_seq.item = member
-    
-    stats = bigip.LocalLB.PoolMember.get_statistics(pool_names=[pool], members=ippd_seq_seq)
-    member_stats = stats[0].statistics[0]
-    # member_stats.member is the IPPortDefinition
+def show_member_statistics(bigip, pool, member, partition=None):
+    member_stats = bigip.pools.member_statistics(pool, member, partition=partition)
     for statistic in member_stats.statistics:
         print "%s,%d,%d" % (statistic.type, statistic.value.high, statistic.value.low)
 
