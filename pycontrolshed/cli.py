@@ -150,13 +150,13 @@ def show_node_status():
         environment = options.environment
         bigip = environment.active_bigip_connection
 
-        nodes = []
-        for node in args:
-            nodes.append(socket.gethostbyname(node))
-        statuses = bigip.LocalLB.NodeAddress.get_session_enabled_state(node_addresses=nodes)
+        statuses = bigip.nodes.status(args, partition=options.partition)
 
-        for node, status in zip(nodes, statuses):
-            print "%s (%s): %s" % (node, socket.getfqdn(node), status)
+        for node, status in zip(args, statuses):
+            if node == status['fqdn']:
+                print "%s: %s" % (node, status['status'])
+            else:
+                print "%s (%s): %s" % (node, status['fqdn'], status['status'])
 
 def show_member_statistics(bigip, pool, member):
     ippd_seq_seq = bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequenceSequence')

@@ -16,6 +16,7 @@ def create_default_arg_parser():
                       default=os.path.expanduser('~/.pycontrolshed'))
     parser.add_option("-e", "--environment", dest="environment",
                       help="iControl environment")
+    parser.add_option("-P", "--partition", dest="partition")
     return parser
 
 def get_configuration(path=None):
