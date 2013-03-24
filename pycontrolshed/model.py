@@ -156,7 +156,6 @@ class PyCtrlShedBIGIP(pycontrol.BIGIP):
     def active_partition(self, partition):
         self.Management.Partition.set_active_partition(partition)
         self._active_partition = partition
-        print "setting route domains for %s" % partition
         self._route_domains = self.Networking.RouteDomain.get_list()
 
     def host_port_to_ipportdef(self, host, port):
