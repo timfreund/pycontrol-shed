@@ -6,8 +6,8 @@
 from pycontrolshed.model import Environment
 from optparse import Option
 import pycontrolshed
-import socket
 import sys
+
 
 def members_validator(arg_parser, options, args):
     if (args is not None and len(args) > 0) or (options.pool is not None):
@@ -15,11 +15,13 @@ def members_validator(arg_parser, options, args):
     print "Please supply one or more pool names"
     return False
 
+
 def member_action_validator(arg_parser, options, args):
     if options.pool is None or options.member is None:
         print "Must supply pool and member arguments"
         return False
     return True
+
 
 def parse_options(additional_options=[], validator=None, custom_usage=None):
     arg_parser = pycontrolshed.create_default_arg_parser()
@@ -52,6 +54,7 @@ def parse_options(additional_options=[], validator=None, custom_usage=None):
 
     return (options, args)
 
+
 def members():
     options, args = parse_options([Option('-s', '--statistics',
                                           action="store_true", default=False, dest='statistics'),
@@ -73,6 +76,7 @@ def members():
                                       member['port'],
                                       member['session'].session_state,
                                       member['monitor'].monitor_status)
+
 
 def pool_member_actor(function, **kwargs):
     options, args = parse_options([Option('-p', '--pool', dest='pool', help='pool name'),
@@ -96,17 +100,22 @@ def pool_member_actor(function, **kwargs):
 def enable_disable_member(bigip, member, pool, target_state, partition=None):
     bigip.pools.enable_disable_members(pool, member, target_state, partition=partition)
 
+
 def enable_member():
     pool_member_actor(enable_disable_member, target_state='STATE_ENABLED')
+
 
 def disable_member():
     pool_member_actor(enable_disable_member, target_state='STATE_DISABLED')
 
+
 def enable_node():
     enable_disable_node('STATE_ENABLED')
 
+
 def disable_node():
     enable_disable_node('STATE_DISABLED')
+
 
 def enable_disable_node(target_state):
     options, args = parse_options([],
@@ -118,9 +127,10 @@ def enable_disable_node(target_state):
         environment = options.environment
         bigip = environment.active_bigip_connection
 
-        statuses = bigip.nodes.enable_disable_nodes(args, target_state, 
+        statuses = bigip.nodes.enable_disable_nodes(args, target_state,
                                                     partition=options.partition)
         print_node_statuses(args, statuses)
+
 
 def show_node_status():
     options, args = parse_options([],
@@ -135,6 +145,7 @@ def show_node_status():
         statuses = bigip.nodes.status(args, partition=options.partition)
         print_node_statuses(args, statuses)
 
+
 def print_node_statuses(nodes, statuses):
     for node, status in zip(nodes, statuses):
         if node == status['fqdn']:
@@ -142,13 +153,16 @@ def print_node_statuses(nodes, statuses):
         else:
             print "%s (%s): %s" % (node, status['fqdn'], status['status'])
 
+
 def show_member_statistics(bigip, pool, member, partition=None):
     member_stats = bigip.pools.member_statistics(pool, member, partition=partition)
     for statistic in member_stats.statistics:
         print "%s,%d,%d" % (statistic.type, statistic.value.high, statistic.value.low)
 
+
 def show_member_statistics_cmd():
     pool_member_actor(show_member_statistics)
+
 
 def pools():
     options, args = parse_options()
@@ -160,6 +174,7 @@ def pools():
 
     for p in pools:
         print p
+
 
 def shell():
     options, args = parse_options()
