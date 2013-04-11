@@ -199,6 +199,7 @@ class Environment(object):
     def __init__(self, name, **kwargs):
         self.name = name
         self.hosts = []
+        self.bigips = {}
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -222,20 +223,26 @@ class Environment(object):
             setattr(self, k, v)
 
     @property
+    def all_bigip_connections(self):
+        return [self.bigips[bigip] for bigip in self.bigips]
+
+    @property
     def active_bigip_connection(self):
         for host in self.hosts:
             bigip = self.connect_to_bigip(host)
-            if 'FAILOVER_STATE_ACTIVE' == bigip.System.Failover.get_failover_state():
+            if bigip.System.Failover.get_failover_state() == 'FAILOVER_STATE_ACTIVE':
                 return bigip
         raise Exception('No active BIGIP devices were found in this environment (%s)' % self.name)
 
-    def connect_to_bigip(self, host, wsdls=['LocalLB.NodeAddress', 'LocalLB.Pool', 'LocalLB.PoolMember',
-                                            'LocalLB.VirtualAddress', 'LocalLB.VirtualServer',
-                                            'Management.Partition', 'Networking.RouteDomain',
-                                            'System.Failover']):
-        bigip = PyCtrlShedBIGIP(host,
-                                self.username,
-                                self.password,
-                                fromurl=True,
-                                wsdls=wsdls)
-        return bigip
+    def connect_to_bigip(self, host, wsdls=None):
+        if not(wsdls):
+            wsdls = ['LocalLB.NodeAddress', 'LocalLB.Pool',
+                     'LocalLB.PoolMember', 'LocalLB.VirtualAddress',
+                     'LocalLB.VirtualServer', 'Management.Partition',
+                     'Networking.RouteDomain', 'System.Failover']
+        self.bigips[host] = PyCtrlShedBIGIP(host,
+                                            self.username,
+                                            self.password,
+                                            fromurl=True,
+                                            wsdls=wsdls)
+        return self.bigips[host]
