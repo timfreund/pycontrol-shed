@@ -57,7 +57,7 @@ def get_password(environment, username):
     default_keyring = keyring.get_keyring()
     password = default_keyring.get_password("pycontrolshed.%s" % environment, username)
 
-    if password is None:
+    if not(password):
         print "No password found for %s@%s" % (username, environment)
         pass1 = getpass.getpass("Please enter the password for %s@%s: " % (username, environment))
         pass2 = getpass.getpass("Please confirm the password for %s@%s: " % (username, environment))

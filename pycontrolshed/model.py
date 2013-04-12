@@ -200,11 +200,13 @@ class Environment(object):
         self.name = name
         self.hosts = []
         self.bigips = {}
+        self.username = None
+        self.password = None
         for k, v in kwargs.items():
             setattr(self, k, v)
 
     def __getattr__(self, name):
-        if name == 'password':
+        if name == 'password' and self.password == None:
             return pycontrolshed.get_password(self.name, self.username)
         else:
             return self.__getattribute__(name)
