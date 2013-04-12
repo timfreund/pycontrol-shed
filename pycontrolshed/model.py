@@ -234,15 +234,18 @@ class Environment(object):
                 return bigip
         raise Exception('No active BIGIP devices were found in this environment (%s)' % self.name)
 
-    def connect_to_bigip(self, host, wsdls=None):
+    def connect_to_bigip(self, host, wsdls=None, force_reconnect=False):
         if not(wsdls):
-            wsdls = ['LocalLB.NodeAddress', 'LocalLB.Pool',
-                     'LocalLB.PoolMember', 'LocalLB.VirtualAddress',
-                     'LocalLB.VirtualServer', 'Management.Partition',
-                     'Networking.RouteDomain', 'System.Failover']
-        self.bigips[host] = PyCtrlShedBIGIP(host,
-                                            self.username,
-                                            self.password,
-                                            fromurl=True,
-                                            wsdls=wsdls)
+            wsdls = [
+                'LocalLB.NodeAddress', 'LocalLB.Pool', 'LocalLB.PoolMember',
+                'LocalLB.VirtualAddress', 'LocalLB.VirtualServer',
+                'Management.Partition', 'Networking.RouteDomain',
+                'System.Failover'
+            ]
+        if host not in self.bigips or force_reconnect:
+            self.bigips[host] = PyCtrlShedBIGIP(host,
+                                                self.username,
+                                                self.password,
+                                                fromurl=True,
+                                                wsdls=wsdls)
         return self.bigips[host]
