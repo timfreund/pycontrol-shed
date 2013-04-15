@@ -204,9 +204,11 @@ class Environment(object):
         self.password = None
         for k, v in kwargs.items():
             setattr(self, k, v)
+        for host in self.hosts:
+            self.connect_to_bigip(host)
 
     def __getattr__(self, name):
-        if name == 'password' and self.password == None:
+        if name == 'password' and self.password is None:
             return pycontrolshed.get_password(self.name, self.username)
         else:
             return self.__getattribute__(name)
