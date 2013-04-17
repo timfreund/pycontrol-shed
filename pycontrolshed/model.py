@@ -198,6 +198,16 @@ class PyCtrlShedBIGIP(pycontrol.BIGIP):
         self._route_domains = self.Networking.RouteDomain.get_list()
         return self._route_domains
 
+    @property
+    def partitions(self):
+        partitions = []
+        for partition in self.Management.Partition.get_partition_list():
+            partitions.append({
+                'name': partition['partition_name'],
+                'description': partition["description"]
+            })
+        return partitions
+
 
 class Environment(object):
     def __init__(self, name, **kwargs):
