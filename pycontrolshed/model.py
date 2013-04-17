@@ -74,6 +74,10 @@ class PoolAssistant(object):
         self.bigip = bigip
 
     @partitioned
+    def pools(self, partition=None):
+        return self.bigip.LocalLB.Pool.get_list()
+
+    @partitioned
     def members(self, pools, partition=None):
         if isinstance(pools, basestring):
             pools = [pools]
