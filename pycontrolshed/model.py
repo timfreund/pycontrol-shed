@@ -78,7 +78,7 @@ class VirtualAssistant(object):
         return self.bigip.LocalLB.VirtualServer.get_list()
 
     @partitioned
-    def servers_statistics(self, partition=None):
+    def all_server_statistics(self, partition=None):
         return self.bigip.LocalLB.VirtualServer.get_all_statistics()
 
     @partitioned
@@ -86,7 +86,7 @@ class VirtualAssistant(object):
         return self.bigip.LocalLB.VirtualAddress.get_list()
 
     @partitioned
-    def addresses_statistics(self, partition=None):
+    def all_address_statistics(self, partition=None):
         return self.bigip.LocalLB.VirtualAddress.get_all_statistics()
 
 
