@@ -69,6 +69,27 @@ class NodeAssistant(object):
         return rc
 
 
+class VirtualAssistant(object):
+    def __init__(self, bigip):
+        self.bigip = bigip
+
+    @partitioned
+    def servers(self, partition=None):
+        return self.bigip.LocalLB.VirtualServer.get_list()
+
+    @partitioned
+    def servers_statistics(self, partition=None):
+        return self.bigip.LocalLB.VirtualServer.get_all_statistics()
+
+    @partitioned
+    def addresses(self, partition=None):
+        return self.bigip.LocalLB.VirtualAddress.get_list()
+
+    @partitioned
+    def addresses_statistics(self, partition=None):
+        return self.bigip.LocalLB.VirtualAddress.get_all_statistics()
+
+
 class PoolAssistant(object):
     def __init__(self, bigip):
         self.bigip = bigip
@@ -150,6 +171,7 @@ class PyCtrlShedBIGIP(pycontrol.BIGIP):
         pycontrol.BIGIP.__init__(self, *args, **kwargs)
         self.nodes = NodeAssistant(self)
         self.pools = PoolAssistant(self)
+        self.virtual = VirtualAssistant(self)
         self._active_partition = None
 
     @property
