@@ -12,6 +12,7 @@ import socket
 # In [2]: route_domains
 # Out[2]: [2220L]
 
+
 def partitioned(f):
     @wraps(f)
     def wrapper(self, *args, **kwargs):
@@ -25,7 +26,8 @@ def partitioned(f):
         else:
             return f(self, *args, **kwargs)
     return wrapper
-        
+
+
 class NodeAssistant(object):
     def __init__(self, bigip):
         self.bigip = bigip
@@ -66,9 +68,35 @@ class NodeAssistant(object):
                        'status': status})
         return rc
 
+
+class VirtualAssistant(object):
+    def __init__(self, bigip):
+        self.bigip = bigip
+
+    @partitioned
+    def servers(self, partition=None):
+        return self.bigip.LocalLB.VirtualServer.get_list()
+
+    @partitioned
+    def all_server_statistics(self, partition=None):
+        return self.bigip.LocalLB.VirtualServer.get_all_statistics()
+
+    @partitioned
+    def addresses(self, partition=None):
+        return self.bigip.LocalLB.VirtualAddress.get_list()
+
+    @partitioned
+    def all_address_statistics(self, partition=None):
+        return self.bigip.LocalLB.VirtualAddress.get_all_statistics()
+
+
 class PoolAssistant(object):
     def __init__(self, bigip):
         self.bigip = bigip
+
+    @partitioned
+    def pools(self, partition=None):
+        return self.bigip.LocalLB.Pool.get_list()
 
     @partitioned
     def members(self, pools, partition=None):
@@ -103,11 +131,10 @@ class PoolAssistant(object):
 
         ippd_seq_seq.item = ippd_seq
         ippd_seq.item = member
-        
+
         # this is kind of garbage too...  see TODO above
         stats = self.bigip.LocalLB.PoolMember.get_statistics(pool_names=pools, members=ippd_seq_seq)[0].statistics[0]
         return stats
-
 
     def disable_member(self, pool_name, members, partition=None):
         return self.enable_disable_members(pool_name, members, 'STATE_DISABLED', partition=partition)
@@ -137,12 +164,14 @@ class PoolAssistant(object):
         self.bigip.LocalLB.PoolMember.set_session_enabled_state(pool_names=pools,
                                                                 session_states=[session_states])
         return self.members(pools, partition=partition)
-        
+
+
 class PyCtrlShedBIGIP(pycontrol.BIGIP):
     def __init__(self, *args, **kwargs):
         pycontrol.BIGIP.__init__(self, *args, **kwargs)
         self.nodes = NodeAssistant(self)
         self.pools = PoolAssistant(self)
+        self.virtual = VirtualAssistant(self)
         self._active_partition = None
 
     @property
@@ -166,7 +195,7 @@ class PyCtrlShedBIGIP(pycontrol.BIGIP):
 
     def host_to_node(self, host):
         # If someone provides us with a route domain, we're going to trust
-        # that they know what route domain to use. 
+        # that they know what route domain to use.
         if host.count('%'):
             host, route_domain = host.split('%', 1)
             return "%s%%%s" % (socket.gethostbyname(host), route_domain)
@@ -190,16 +219,32 @@ class PyCtrlShedBIGIP(pycontrol.BIGIP):
             return self._route_domains
         self._route_domains = self.Networking.RouteDomain.get_list()
         return self._route_domains
-        
+
+    @property
+    def partitions(self):
+        partitions = []
+        for partition in self.Management.Partition.get_partition_list():
+            partitions.append({
+                'name': partition['partition_name'],
+                'description': partition["description"]
+            })
+        return partitions
+
+
 class Environment(object):
     def __init__(self, name, **kwargs):
         self.name = name
         self.hosts = []
+        self.bigips = {}
+        self.username = None
+        self.password = None
         for k, v in kwargs.items():
             setattr(self, k, v)
+        for host in self.hosts:
+            self.connect_to_bigip(host)
 
     def __getattr__(self, name):
-        if name == 'password':
+        if name == 'password' and self.password is None:
             return pycontrolshed.get_password(self.name, self.username)
         else:
             return self.__getattribute__(name)
@@ -218,21 +263,29 @@ class Environment(object):
             setattr(self, k, v)
 
     @property
+    def all_bigip_connections(self):
+        return [self.bigips[bigip] for bigip in self.bigips]
+
+    @property
     def active_bigip_connection(self):
         for host in self.hosts:
             bigip = self.connect_to_bigip(host)
-            if 'FAILOVER_STATE_ACTIVE' == bigip.System.Failover.get_failover_state():
+            if bigip.System.Failover.get_failover_state() == 'FAILOVER_STATE_ACTIVE':
                 return bigip
         raise Exception('No active BIGIP devices were found in this environment (%s)' % self.name)
 
-    def connect_to_bigip(self, host, wsdls=['LocalLB.NodeAddress', 'LocalLB.Pool', 'LocalLB.PoolMember', 
-                                            'LocalLB.VirtualAddress', 'LocalLB.VirtualServer', 
-                                            'Management.Partition', 'Networking.RouteDomain', 
-                                            'System.Failover']):
-        bigip = PyCtrlShedBIGIP(host,
-                                self.username,
-                                self.password,
-                                fromurl=True,
-                                wsdls=wsdls)
-        return bigip
-
+    def connect_to_bigip(self, host, wsdls=None, force_reconnect=False):
+        if not(wsdls):
+            wsdls = [
+                'LocalLB.NodeAddress', 'LocalLB.Pool', 'LocalLB.PoolMember',
+                'LocalLB.VirtualAddress', 'LocalLB.VirtualServer',
+                'Management.Partition', 'Networking.RouteDomain',
+                'System.Failover'
+            ]
+        if host not in self.bigips or force_reconnect:
+            self.bigips[host] = PyCtrlShedBIGIP(host,
+                                                self.username,
+                                                self.password,
+                                                fromurl=True,
+                                                wsdls=wsdls)
+        return self.bigips[host]

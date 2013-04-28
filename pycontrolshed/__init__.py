@@ -10,6 +10,7 @@ import os
 import sys
 from optparse import OptionParser
 
+
 def create_default_arg_parser():
     parser = OptionParser(usage="usage: %%prog\n%s" % __doc__)
     parser.add_option("-c", "--configuration", dest="configuration",
@@ -18,6 +19,7 @@ def create_default_arg_parser():
                       help="iControl environment")
     parser.add_option("-P", "--partition", dest="partition")
     return parser
+
 
 def get_configuration(path=None):
     if path is None:
@@ -50,11 +52,12 @@ hosts=127.0.0.3,127.0.0.4
 
     return config
 
+
 def get_password(environment, username):
     default_keyring = keyring.get_keyring()
     password = default_keyring.get_password("pycontrolshed.%s" % environment, username)
 
-    if password is None:
+    if not(password):
         print "No password found for %s@%s" % (username, environment)
         pass1 = getpass.getpass("Please enter the password for %s@%s: " % (username, environment))
         pass2 = getpass.getpass("Please confirm the password for %s@%s: " % (username, environment))
@@ -66,4 +69,3 @@ def get_password(environment, username):
             raise Exception("passwords don't match")
 
     return password
-        

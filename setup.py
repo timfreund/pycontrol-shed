@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name='pycontrolshed',
@@ -8,18 +8,18 @@ setup(
     description="BIGIP pycontrol shell edition",
     author='Tim Freund',
     author_email='tim@freunds.net',
-    license = 'GPLv2+',
+    license='GPLv2+',
     url='http://github.com/timfreund/pycontrolshed',
     install_requires=[
         'pycontrol >= 2.0.0',
         'keyring',
-                ],
+    ],
     packages=['pycontrolshed'],
     test_suite='nose.collector',
     tests_require=[
-                   'nose',
-                   'coverage',
-                   ],
+        'nose',
+        'coverage',
+    ],
     include_package_data=True,
     entry_points="""
     [console_scripts]
