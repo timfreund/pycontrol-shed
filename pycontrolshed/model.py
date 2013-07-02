@@ -232,14 +232,11 @@ class PyCtrlShedBIGIP(pycontrol.BIGIP):
 
 
 class Environment(object):
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, hosts=[], username=None):
         self.name = name
-        self.hosts = []
+        self.hosts = hosts
         self.bigips = {}
-        self.username = None
-        self.password = None
-        for k, v in kwargs.items():
-            setattr(self, k, v)
+        self.username = username
         for host in self.hosts:
             self.connect_to_bigip(host)
 
