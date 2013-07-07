@@ -5,6 +5,7 @@
 
 from functools import wraps
 from pycontrol import pycontrol
+import logging
 import pycontrolshed
 import socket
 
@@ -12,6 +13,7 @@ import socket
 # In [2]: route_domains
 # Out[2]: [2220L]
 
+log = logging.getLogger('pycontrolshed.model')
 
 def partitioned(f):
     @wraps(f)
@@ -240,12 +242,6 @@ class Environment(object):
         for host in self.hosts:
             self.connect_to_bigip(host)
 
-    def __getattr__(self, name):
-        if name == 'password' and self.password is None:
-            return pycontrolshed.get_password(self.name, self.username)
-        else:
-            return self.__getattribute__(name)
-
     def __setattr__(self, name, value):
         if name == 'hosts':
             if isinstance(value, str) or isinstance(value, unicode):
@@ -279,6 +275,16 @@ class Environment(object):
                 'Management.Partition', 'Networking.RouteDomain',
                 'System.Failover'
             ]
+        
+        if not hasattr(self, 'password'):
+            log.debug('No password has been set, attempting to retrive via keychain capabilities')
+            password = pycontrolshed.get_password(self.name, self.username)
+            if password:
+                log.debug('Password retrived from the keychain')
+                self.password = password
+            else:
+                log.error('No password is available')
+
         if host not in self.bigips or force_reconnect:
             self.bigips[host] = PyCtrlShedBIGIP(host,
                                                 self.username,
