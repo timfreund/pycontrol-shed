@@ -121,8 +121,32 @@ class PoolAssistant(object):
         return rc
 
     @partitioned
+    def multi_member_statistics(self, pools, members, partition=None):
+        seq_members = []
+        ippd_seq_seq = self.bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequenceSequence')
+        ippd_seq_seq.item = seq_members
+
+        if isinstance(members, list):
+            pass
+        elif isinstance(members, dict):
+            mlist = []
+            for k in pools:
+                mlist.append(members[k]['members'])
+            members = mlist
+
+        for member_list in members:
+            seq_members.append(self.pool_members_to_ippd_seq(member_list))
+        stats = self.bigip.LocalLB.PoolMember.get_statistics(pool_names=pools, members=ippd_seq_seq)
+        rc = {}
+        for p, s in zip(pools, stats):
+            s = self.collapse_member_statistics(s)
+            rc[p] = s
+
+        return rc
+
+    @partitioned
     def member_statistics(self, pool, member, partition=None):
-        # TODO This is kinda crappy... we should allow multiple pools and members here.
+        # TODO refactor this to be a special case of multi_member_statistics
         pools = [pool]
         if isinstance(member, basestring):
             ipp_member = self.bigip.host_port_to_ipportdef(*member.split(':'))
@@ -166,6 +190,35 @@ class PoolAssistant(object):
         self.bigip.LocalLB.PoolMember.set_session_enabled_state(pool_names=pools,
                                                                 session_states=[session_states])
         return self.members(pools, partition=partition)
+
+    def pool_members_to_ippd_seq(self, members):
+        ippd_seq = self.bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequence')
+        ippd_members = []
+        ippd_seq.item = ippd_members
+        for member in members:
+            address = None
+            port = None
+            if isinstance(member, dict):
+                address = member['address']
+                port = member['port']
+            elif isinstance(member, basestring):
+                address, port = member.split(':')
+            else:
+                raise Exception("Unknown member type")
+            ippd_members.append(self.bigip.host_port_to_ipportdef(address, port))
+        return ippd_seq
+
+    def collapse_member_statistics(self, pool_stats):
+        stats = {}
+        # LocalLB.PoolMember.MemberStatisticEntry
+        for mse in pool_stats.statistics:
+            member_id = "%s:%d" % (mse.member.address,
+                                   mse.member.port)
+            stats[member_id] = {}
+            for stat in mse.statistics:
+                stats[member_id][stat.type] = {'high': stat.value.high,
+                                               'low': stat.value.low}
+        return stats
 
 
 class PyCtrlShedBIGIP(pycontrol.BIGIP):
