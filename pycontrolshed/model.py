@@ -327,9 +327,9 @@ class Environment(object):
         if not(wsdls):
             wsdls = [
                 'LocalLB.NodeAddress', 'LocalLB.Pool', 'LocalLB.PoolMember',
-                'LocalLB.VirtualAddress', 'LocalLB.VirtualServer',
+                'LocalLB.Rule', 'LocalLB.VirtualAddress', 'LocalLB.VirtualServer',
                 'Management.Partition', 'Networking.RouteDomain',
-                'System.Failover', 'LocalLB.Rule'
+                'System.Failover',
             ]
         
         if not hasattr(self, 'password'):
