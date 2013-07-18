@@ -329,7 +329,7 @@ class Environment(object):
                 'LocalLB.NodeAddress', 'LocalLB.Pool', 'LocalLB.PoolMember',
                 'LocalLB.VirtualAddress', 'LocalLB.VirtualServer',
                 'Management.Partition', 'Networking.RouteDomain',
-                'System.Failover'
+                'System.Failover', 'LocalLB.Rule'
             ]
         
         if not hasattr(self, 'password'):
