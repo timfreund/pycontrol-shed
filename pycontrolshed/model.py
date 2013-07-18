@@ -96,6 +96,9 @@ class PoolAssistant(object):
     def __init__(self, bigip):
         self.bigip = bigip
 
+    def create_type(self, type_name):
+        return self.bigip.LocalLB.PoolMember.typefactory.create(type_name)
+
     @partitioned
     def pools(self, partition=None):
         return self.bigip.LocalLB.Pool.get_list()
@@ -123,7 +126,7 @@ class PoolAssistant(object):
     @partitioned
     def multi_member_statistics(self, pools, members, partition=None):
         seq_members = []
-        ippd_seq_seq = self.bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequenceSequence')
+        ippd_seq_seq = self.create_type('Common.IPPortDefinitionSequenceSequence')
         ippd_seq_seq.item = seq_members
 
         if isinstance(members, list):
@@ -152,8 +155,8 @@ class PoolAssistant(object):
             ipp_member = self.bigip.host_port_to_ipportdef(*member.split(':'))
             member = ipp_member
 
-        ippd_seq_seq = self.bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequenceSequence')
-        ippd_seq = self.bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequence')
+        ippd_seq_seq = self.create_type('Common.IPPortDefinitionSequenceSequence')
+        ippd_seq = self.create_type('Common.IPPortDefinitionSequence')
 
         ippd_seq_seq.item = ippd_seq
         ippd_seq.item = member
@@ -175,14 +178,14 @@ class PoolAssistant(object):
         if isinstance(members, basestring) or members.__class__.__name__.count('IPPortDefinition'):
             members = [members]
 
-        session_states = self.bigip.LocalLB.PoolMember.typefactory.create('LocalLB.PoolMember.MemberSessionStateSequence')
+        session_states = self.create_type('LocalLB.PoolMember.MemberSessionStateSequence')
         session_states.item = []
         for member in members:
             if isinstance(member, basestring):
                 ipp_member = self.bigip.host_port_to_ipportdef(*member.split(':'))
                 member = ipp_member
 
-            state = self.bigip.LocalLB.PoolMember.typefactory.create('LocalLB.PoolMember.MemberSessionState')
+            state = self.create_type('LocalLB.PoolMember.MemberSessionState')
             state.member = member
             state.session_state = target_state
             session_states.item.append(state)
@@ -192,7 +195,7 @@ class PoolAssistant(object):
         return self.members(pools, partition=partition)
 
     def pool_members_to_ippd_seq(self, members):
-        ippd_seq = self.bigip.LocalLB.PoolMember.typefactory.create('Common.IPPortDefinitionSequence')
+        ippd_seq = self.create_type('Common.IPPortDefinitionSequence')
         ippd_members = []
         ippd_seq.item = ippd_members
         for member in members:
