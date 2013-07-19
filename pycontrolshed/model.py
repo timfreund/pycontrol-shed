@@ -129,12 +129,19 @@ class PoolAssistant(object):
         ippd_seq_seq = self.create_type('Common.IPPortDefinitionSequenceSequence')
         ippd_seq_seq.item = seq_members
 
+        empty_pools = []
+
         if isinstance(members, list):
             pass
         elif isinstance(members, dict):
             mlist = []
             for k in pools:
-                mlist.append(members[k]['members'])
+                if len(members[k]['members']) == 0:
+                    empty_pools.append(k)
+                else:
+                    mlist.append(members[k]['members'])
+            for ep in empty_pools:
+                pools.remove(ep)
             members = mlist
 
         for member_list in members:
