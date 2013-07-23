@@ -297,16 +297,26 @@ class PyCtrlShedBIGIP(pycontrol.BIGIP):
 
 
 class Environment(object):
-    def __init__(self, name, hosts=[], username=None):
+    def __init__(self, name, hosts=[], wsdls=None, username=None):
         self.name = name
         self.hosts = hosts
         self.bigips = {}
         self.username = username
+        self.wsdls = wsdls
+
+        if self.wsdls is None:
+            self.wsdls = [
+                'LocalLB.NodeAddress', 'LocalLB.Pool', 'LocalLB.PoolMember',
+                'LocalLB.Rule', 'LocalLB.VirtualAddress', 'LocalLB.VirtualServer',
+                'Management.Partition', 'Networking.RouteDomain',
+                'System.Failover',
+            ]
+
         for host in self.hosts:
             self.connect_to_bigip(host)
 
     def __setattr__(self, name, value):
-        if name == 'hosts':
+        if name in ['hosts', 'wsdls']:
             if isinstance(value, str) or isinstance(value, unicode):
                 object.__setattr__(self, name, [host.strip() for host in value.split(',')])
             else:
@@ -332,12 +342,7 @@ class Environment(object):
 
     def connect_to_bigip(self, host, wsdls=None, force_reconnect=False):
         if not(wsdls):
-            wsdls = [
-                'LocalLB.NodeAddress', 'LocalLB.Pool', 'LocalLB.PoolMember',
-                'LocalLB.Rule', 'LocalLB.VirtualAddress', 'LocalLB.VirtualServer',
-                'Management.Partition', 'Networking.RouteDomain',
-                'System.Failover',
-            ]
+            wsdls = self.wsdls
         
         if not hasattr(self, 'password'):
             log.debug('No password has been set, attempting to retrive via keychain capabilities')

@@ -38,6 +38,7 @@ default_environment=my_environment
 [my_environment]
 username=my_username
 hosts=127.0.0.1,127.0.0.2
+# wsdls=System.Failover, Management.Partition, etc
 
 [my_other_environment]
 username=my_other_username
