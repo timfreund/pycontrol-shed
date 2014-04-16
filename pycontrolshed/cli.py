@@ -169,7 +169,7 @@ def pools():
 
     environment = options.environment
     bigip = environment.active_bigip_connection
-    pools = bigip.LocalLB.Pool.get_list()
+    pools = bigip.pools.pools(partition=options.partition)
     pools.sort()
 
     for p in pools:
